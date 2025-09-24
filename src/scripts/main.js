@@ -8,11 +8,23 @@ const usesCommas = sampleText.includes(',');
 const usesSpaces = sampleText.includes(' ') || sampleText.includes(' ');
 
 const validNumbers = data
-  .map((span) => Number(span.textContent.replace(/,/g, '')))
-  .filter((num) => !isNaN(num));
+  .map((span) => {
+    const rawValue = span.textContent.trim().replace(/[,\s\u00A0\u202F]/g, '');
 
-const total = validNumbers.reduce((sum, num) => sum + num, 0);
-const average = Math.round(total / validNumbers.length);
+    return Number(rawValue);
+  })
+  .filter((num) => Number.isFinite(num));
+
+let total = 0;
+let average = 0;
+
+if (validNumbers.length > 0) {
+  total = validNumbers.reduce((sum, num) => sum + num, 0);
+  average = Math.round(total / validNumbers.length);
+} else {
+  total = 0;
+  average = 0;
+}
 
 function formatInSameStyle(number) {
   if (usesCommas) {
@@ -24,10 +36,20 @@ function formatInSameStyle(number) {
   }
 }
 
-document.querySelectorAll('span.average-population').forEach((element) => {
-  element.textContent = formatInSameStyle(average);
-});
+if (validNumbers.length > 0) {
+  document.querySelectorAll('span.average-population').forEach((element) => {
+    element.textContent = formatInSameStyle(average);
+  });
 
-document.querySelectorAll('span.total-population').forEach((element) => {
-  element.textContent = formatInSameStyle(total);
-});
+  document.querySelectorAll('span.total-population').forEach((element) => {
+    element.textContent = formatInSameStyle(total);
+  });
+} else {
+  document.querySelectorAll('span.average-population').forEach((element) => {
+    element.textContent = 'N/A';
+  });
+
+  document.querySelectorAll('span.total-population').forEach((element) => {
+    element.textContent = 'N/A';
+  });
+}
