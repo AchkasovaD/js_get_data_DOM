@@ -1,19 +1,40 @@
 'use strict';
 
 // write your code here
-const data = [...document.querySelectorAll('span.population')];
+const populationSpans = [...document.querySelectorAll('span.population')];
 
-const sampleText = data[0]?.textContent || '';
-const usesCommas = sampleText.includes(',');
-const usesSpaces = sampleText.includes(' ') || sampleText.includes(' ');
+let sampleText = '';
 
-const validNumbers = data
+for (const span of populationSpans) {
+  const text = span.textContent.trim();
+  const rawValue = text.replace(/[,\s.\u00A0\u202F]/g, '');
+  const num = Number(rawValue);
+
+  if (Number.isFinite(num) && num > 0 && text.length > 0) {
+    sampleText = text;
+    break;
+  }
+}
+
+let detectedSeparator = null;
+
+if (sampleText) {
+  const separatorMatch = sampleText.match(
+    /(\d)([,\s.\u00A0\u202F])(\d{3}(?:[,\s.\u00A0\u202F]|$))/,
+  );
+
+  if (separatorMatch) {
+    detectedSeparator = separatorMatch[2];
+  }
+}
+
+const validNumbers = populationSpans
   .map((span) => {
-    const rawValue = span.textContent.trim().replace(/[,\s\u00A0\u202F]/g, '');
+    const rawValue = span.textContent.trim().replace(/[,\s.\u00A0\u202F]/g, '');
 
     return Number(rawValue);
   })
-  .filter((num) => Number.isFinite(num));
+  .filter((num) => Number.isFinite(num) && num > 0);
 
 let total = 0;
 let average = 0;
@@ -27,13 +48,11 @@ if (validNumbers.length > 0) {
 }
 
 function formatInSameStyle(number) {
-  if (usesCommas) {
-    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  } else if (usesSpaces) {
-    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-  } else {
-    return number.toLocaleString();
+  if (!detectedSeparator) {
+    return number.toString();
   }
+
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, detectedSeparator);
 }
 
 if (validNumbers.length > 0) {
